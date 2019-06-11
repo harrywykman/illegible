@@ -4,6 +4,8 @@ import random
 from entity import Entity
 from map_objects.tile import Tile
 from map_objects import rectangle as rect
+from components import ai, fighter
+import render_functions as rfs
 
 
 
@@ -102,9 +104,15 @@ class GameMap:
 
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
                 if random.randint(0, 100) < 80:
-                    monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True)
+                    fighter_component = fighter.Fighter(hp=10, defense=0, power=3)
+                    ai_component = ai.BasicMonster()
+                    monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
+                                     render_order=rfs.RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 else:
-                    monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True)
+                    fighter_component = fighter.Fighter(hp=16, defense=1, power=4)
+                    ai_component = ai.BasicMonster()
+                    monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
+                                     render_order=rfs.RenderOrder.ACTOR, ai=ai_component)
 
                 entities.append(monster)
 
