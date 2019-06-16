@@ -7,6 +7,7 @@ from map_objects import rectangle as rect
 from components import ai, fighter, item
 import render_functions
 import item_functions
+import game_messages
 
 
 class GameMap:
@@ -160,18 +161,29 @@ class GameMap:
                 [entity for entity in entities if entity.x == x and entity.y == y]
             ):
 
-                item_component = item.Item(use_function=item_functions.heal, amount=4)
-                healing_potion = Entity(
-                    x,
-                    y,
-                    "!",
-                    libtcod.violet,
-                    "Healing Potion",
-                    render_order=render_functions.RenderOrder.ITEM,
-                    item=item_component,
-                )
+                item_chance = random.randint(0,100)
 
-                entities.append(healing_potion)
+                if item_chance < 70:
+                    item_component = item.Item(use_function=item_functions.heal, amount=4)
+                    itm = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order=render_functions.RenderOrder.ITEM,
+                                  item=item_component)
+                elif item_chance < 80:
+                    item_component = item.Item(use_function=item_functions.cast_fireball, targeting=True, targeting_message=game_messages.Message(
+                        'Left-click a target tile for the fireball, or right-click to cancel.', libtcod.light_cyan),
+                                          damage=12, radius=3)
+                    itm = Entity(x, y, '#', libtcod.red, 'Fireball Scroll', render_order=render_functions.RenderOrder.ITEM,
+                                  item=item_component)
+                elif item_chance < 90:
+                    item_component = item.Item(use_function=item_functions.cast_confuse, targeting=True, targeting_message=game_messages.Message(
+                        'Left-click an enemy to confuse it, or right-click to cancel.', libtcod.light_cyan))
+                    itm = Entity(x, y, '#', libtcod.light_pink, 'Confusion Scroll', render_order=render_functions.RenderOrder.ITEM,
+                                  item=item_component)
+                else:
+                    item_component = item.Item(use_function=item_functions.cast_lightning, damage=20, maximum_range=5)
+                    itm = Entity(x, y, '#', libtcod.yellow, 'Lightning Scroll', render_order=render_functions.RenderOrder.ITEM,
+                                  item=item_component)
+
+                entities.append(itm)
 
     def is_blocked(self, x, y):
         return self.tiles[x][y].blocked
