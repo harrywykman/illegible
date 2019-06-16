@@ -4,9 +4,9 @@ import random
 from entity import Entity
 from map_objects.tile import Tile
 from map_objects import rectangle as rect
-from components import ai, fighter
-import render_functions as rfs
-
+from components import ai, fighter, item
+import render_functions
+import item_functions
 
 
 class GameMap:
@@ -19,8 +19,18 @@ class GameMap:
         tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
         return tiles
 
-    def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
-                 max_monsters_per_room):
+    def make_map(
+        self,
+        max_rooms,
+        room_min_size,
+        room_max_size,
+        map_width,
+        map_height,
+        player,
+        entities,
+        max_monsters_per_room,
+        max_items_per_room,
+    ):
         rooms = []
         num_rooms = 0
 
@@ -69,12 +79,13 @@ class GameMap:
                         self.create_v_tunnel(prev_y, new_y, prev_x)
                         self.create_h_tunnel(prev_x, new_x, new_y)
 
-                self.place_entities(new_room, entities, max_monsters_per_room)
+                self.place_entities(
+                    new_room, entities, max_monsters_per_room, max_items_per_room
+                )
 
                 # finally, append the new room to the list
                 rooms.append(new_room)
                 num_rooms += 1
-
 
     def create_room(self, room):
         # go through the tiles in the rectangle and make them passable
@@ -93,28 +104,74 @@ class GameMap:
             self.tiles[x][y].blocked = False
             self.tiles[x][y].block_sight = False
 
-    def place_entities(self, room, entities, max_monsters_per_room):
+    def place_entities(self, room, entities, max_monsters_per_room, max_items_per_room):
         # Get a random number of monsters
         number_of_monsters = random.randint(0, max_monsters_per_room)
+        number_of_items = random.randint(0, max_items_per_room)
+
+        print("before monsters")
 
         for i in range(number_of_monsters):
             # Choose a random location in the room
             x = random.randint(room.x1 + 1, room.x2 - 1)
             y = random.randint(room.y1 + 1, room.y2 - 1)
 
-            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+            if not any(
+                [entity for entity in entities if entity.x == x and entity.y == y]
+            ):
                 if random.randint(0, 100) < 80:
                     fighter_component = fighter.Fighter(hp=10, defense=0, power=3)
                     ai_component = ai.BasicMonster()
-                    monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
-                                     render_order=rfs.RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
+                    monster = Entity(
+                        x,
+                        y,
+                        "o",
+                        libtcod.desaturated_green,
+                        "Orc",
+                        blocks=True,
+                        render_order=render_functions.RenderOrder.ACTOR,
+                        fighter=fighter_component,
+                        ai=ai_component,
+                    )
                 else:
                     fighter_component = fighter.Fighter(hp=16, defense=1, power=4)
                     ai_component = ai.BasicMonster()
-                    monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
-                                     render_order=rfs.RenderOrder.ACTOR, ai=ai_component)
+                    monster = Entity(
+                        x,
+                        y,
+                        "T",
+                        libtcod.darker_green,
+                        "Troll",
+                        blocks=True,
+                        fighter=fighter_component,
+                        render_order=render_functions.RenderOrder.ACTOR,
+                        ai=ai_component,
+                    )
 
                 entities.append(monster)
+
+        print("before items")
+
+        for i in range(number_of_items):
+            x = random.randint(room.x1 + 1, room.x2 - 1)
+            y = random.randint(room.y1 + 1, room.y2 - 1)
+
+            if not any(
+                [entity for entity in entities if entity.x == x and entity.y == y]
+            ):
+
+                item_component = item.Item(use_function=item_functions.heal, amount=4)
+                healing_potion = Entity(
+                    x,
+                    y,
+                    "!",
+                    libtcod.violet,
+                    "Healing Potion",
+                    render_order=render_functions.RenderOrder.ITEM,
+                    item=item_component,
+                )
+
+                entities.append(healing_potion)
 
     def is_blocked(self, x, y):
         return self.tiles[x][y].blocked
