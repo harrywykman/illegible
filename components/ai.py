@@ -21,6 +21,7 @@ class BasicMonster:
 
         return results
 
+
 class ConfusedMonster:
     def __init__(self, previous_ai, number_of_turns=10):
         self.previous_ai = previous_ai
@@ -39,6 +40,13 @@ class ConfusedMonster:
             self.number_of_turns -= 1
         else:
             self.owner.ai = self.previous_ai
-            results.append({'message': game_messages.Message('The {0} is no longer confused!'.format(self.owner.name), libtcod.red)})
+            results.append(
+                {
+                    "message": game_messages.Message(
+                        "The {0} is no longer confused!".format(self.owner.name),
+                        libtcod.red,
+                    )
+                }
+            )
 
         return results
